@@ -10,7 +10,7 @@ should work, including Chrome based browsers on desktop and Android. The primary
 ## Screenshots
 
 <img width="1426" height="1274" alt="image" src="https://github.com/user-attachments/assets/fe89b9c0-4124-4caf-960c-b9201d1cb610" />
-">
+
 
 ### Hardware
 
