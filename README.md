@@ -9,11 +9,13 @@ should work, including Chrome based browsers on desktop and Android. The primary
 
 ## Screenshots
 
-<img width="846" alt="screenshot" src="https://user-images.githubusercontent.com/164192/192336525-22cdd0de-6e44-452f-af97-06c34b4559b4.png">
+<img width="846" alt="screenshot" src="<img width="1426" height="1274" alt="image" src="https://github.com/user-attachments/assets/fe89b9c0-4124-4caf-960c-b9201d1cb610" />
+">
 
 ### Hardware
 
-![image]( <img width="1426" height="1274" alt="image" src="https://github.com/user-attachments/assets/079cf5d4-38cd-4b25-8fd9-a75eb799c5c5" />
+![image](<img width="720" height="610" alt="image" src="https://github.com/user-attachments/assets/c7919809-7748-4452-9016-cdb80c0cc558" />
+>
 )
 
 This should work with most of the power meters made by Atorch. It has only been
