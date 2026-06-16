@@ -1,110 +1,699 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>USB Multi Meter</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-raised: #232733;
+      --border: #2e3345;
+      --text: #e4e6ed;
+      --text-muted: #8b90a0;
+      --supply-color: #f59e0b;
+      --supply-bg: rgba(245, 158, 11, 0.1);
+      --device-color: #3b82f6;
+      --device-bg: rgba(59, 130, 246, 0.1);
+      --delta-color: #10b981;
+      --delta-bg: rgba(16, 185, 129, 0.1);
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
 
-  <title>USB BLE Power Meter</title>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header h1 span {
+      color: var(--supply-color);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--supply-color);
+    }
+
+    .badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .ble-warning {
+      background: var(--surface);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .ble-warning.visible {
+      display: block;
+    }
+
+    .connection-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .device-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .device-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .device-card.supply::before {
+      background: var(--supply-color);
+    }
+
+    .device-card.device::before {
+      background: var(--device-color);
+    }
+
+    .device-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .device-card-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .supply .device-card-title {
+      color: var(--supply-color);
+    }
+
+    .device .device-card-title {
+      color: var(--device-color);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .status-dot.connected {
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    .device-name {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      min-height: 1.2rem;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-raised);
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--border);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-supply {
+      border-color: var(--supply-color);
+      color: var(--supply-color);
+    }
+
+    .btn-supply:hover {
+      background: var(--supply-bg);
+    }
+
+    .btn-device {
+      border-color: var(--device-color);
+      color: var(--device-color);
+    }
+
+    .btn-device:hover {
+      background: var(--device-bg);
+    }
+
+    .btn-danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .btn-primary {
+      background: var(--supply-color);
+      color: #000;
+      border-color: var(--supply-color);
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .controls .spacer {
+      flex: 1;
+    }
+
+    .readings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .readings-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .readings-section-header {
+      padding: 12px 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .readings-section.supply .readings-section-header {
+      background: var(--supply-bg);
+      color: var(--supply-color);
+    }
+
+    .readings-section.device .readings-section-header {
+      background: var(--device-bg);
+      color: var(--device-color);
+    }
+
+    .readings-section.delta .readings-section-header {
+      background: var(--delta-bg);
+      color: var(--delta-color);
+    }
+
+    .reading-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+
+    .reading-row:last-child {
+      border-bottom: none;
+    }
+
+    .reading-label {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .reading-value {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-weight: 600;
+    }
+
+    .reading-value.large {
+      font-size: 1.1rem;
+    }
+
+    .chart-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .chart-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .chart-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-raised);
+      padding: 3px;
+      border-radius: var(--radius-sm);
+    }
+
+    .chart-tab {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      transition: all 0.15s ease;
+    }
+
+    .chart-tab.active {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 300px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .stat-card-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      padding: 4px 0;
+    }
+
+    .stat-row .label {
+      color: var(--text-muted);
+    }
+
+    .stat-row .value {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-weight: 500;
+    }
+
+    .log-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .log-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .log-entry {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding: 2px 0;
+    }
+
+    .log-entry.error {
+      color: var(--danger);
+    }
+
+    .log-entry.success {
+      color: var(--success);
+    }
+
+    .sample-counter {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      background: var(--surface-raised);
+      border-radius: var(--radius-sm);
+    }
+
+    .elapsed {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 0;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      margin-top: 24px;
+    }
+
+    footer a {
+      color: var(--supply-color);
+      text-decoration: none;
+    }
+
+    @media (max-width: 900px) {
+      .connection-panel {
+        grid-template-columns: 1fr;
+      }
+      .readings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        padding: 12px;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
 </head>
-
 <body>
-  <h1>USB BLE Power Meter</h1>
-  <h2 id="warnBlock">Your Browser does not appear to support WebBluetooth</h2>
-  <h3>Information</h3>
-  <p>Web app data logger for Atorch power meters.</p>
+  <div class="app">
+    <header>
+      <h1><span>USB</span> Multi Meter</h1>
+      <div class="header-actions">
+        <span class="badge badge-warning">WebBluetooth Required</span>
+      </div>
+    </header>
 
-  <p>View <a href="https://github.com/lanrat/usb-meter/blob/main/README.md">README</a> for more Information.</p>
+    <div class="ble-warning" id="bleWarning">
+      Your browser does not support WebBluetooth. Please use Chrome, Edge, or Opera on desktop/Android.
+    </div>
 
-  <hr>
+    <!-- Connection Panel -->
+    <div class="connection-panel">
+      <div class="device-card supply">
+        <div class="device-card-header">
+          <span class="device-card-title">Power Supply Side</span>
+          <span class="status-dot" id="supplyStatus"></span>
+        </div>
+        <div class="device-name" id="supplyName">Not connected</div>
+        <button class="btn btn-supply" id="btnConnectSupply">Connect</button>
+      </div>
+      <div class="device-card device">
+        <div class="device-card-header">
+          <span class="device-card-title">Device Under Test</span>
+          <span class="status-dot" id="deviceStatus"></span>
+        </div>
+        <div class="device-name" id="deviceName">Not connected</div>
+        <button class="btn btn-device" id="btnConnectDevice">Connect</button>
+      </div>
+    </div>
 
-  <button id="go" onclick="Go()">Connect</button>
-  <button id="reset" onclick="Reset()">Reset</button>
-  <button id="pause" onclick="Pause()">Pause</button>
-  <button id="save" onclick="Save()">Save</button>
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn btn-primary" id="btnRecord">Start Recording</button>
+      <button class="btn" id="btnReset">Reset</button>
+      <button class="btn" id="btnPause">Pause</button>
+      <span class="spacer"></span>
+      <span class="elapsed" id="elapsed">00:00:00</span>
+      <span class="sample-counter" id="sampleCounter">Samples: 0 / 0</span>
+      <button class="btn" id="btnExport">Export CSV</button>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Measurement</th>
-        <th>Value</th>
-        <th>Stats (min/max/average)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="color: yellow">
-        <td>Voltage</td>
-        <td id="voltage"></td>
-        <td id="voltage_stats"></td>
-      </tr>
-      <tr style="color: green">
-        <td>Current</td>
-        <td id="current"></td>
-        <td id="current_stats"></td>
-      </tr>
-      <tr style="color: Red">
-        <td>Power</td>
-        <td id="power"></td>
-        <td id="power_stats"></td>
-      </tr>
-      <tr style="color: purple">
-        <td>Energy</td>
-        <td id="energy"></td>
-        <td id="energy_stats"></td>
-      </tr>
-      <tr style="color: lightBlue">
-        <td>Capacity</td>
-        <td id="capacity"></td>
-        <td id="capacity_stats"></td>
-      </tr>
-      <tr style="color: blue">
-        <td>Resistance</td>
-        <td id="resistance"></td>
-        <td id="resistance_stats"></td>
-      </tr>
-      <tr style="color: turquoise">
-        <td>Temperature</td>
-        <td id="temperature"></td>
-        <td id="temperature_stats"></td>
-      </tr>
-      <tr style="color: lightGreen">
-        <td>USB Data -/+</td>
-        <td id="usb"></td>
-        <td id="usb_stats"></td>
-      </tr>
-      <tr style="color: grey">
-        <td>Time</td>
-        <td id="time">000:00:00</td>
-        <td id="time_stats">Samples: 0</td>
-      </tr>
-    </tbody>
-  </table>
+    <!-- Live Readings -->
+    <div class="readings-grid">
+      <div class="readings-section supply">
+        <div class="readings-section-header">Power Supply</div>
+        <div class="reading-row">
+          <span class="reading-label">Voltage</span>
+          <span class="reading-value" id="supplyVoltage">-- V</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Current</span>
+          <span class="reading-value" id="supplyCurrent">-- A</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Power</span>
+          <span class="reading-value large" id="supplyPower">-- W</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Energy</span>
+          <span class="reading-value" id="supplyEnergy">-- Wh</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Capacity</span>
+          <span class="reading-value" id="supplyCapacity">-- mAh</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Temperature</span>
+          <span class="reading-value" id="supplyTemp">-- °C</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">USB D-/D+</span>
+          <span class="reading-value" id="supplyUsb">-- / -- V</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Duration</span>
+          <span class="reading-value" id="supplyDuration">000:00:00</span>
+        </div>
+      </div>
 
-  <hr>
+      <div class="readings-section device">
+        <div class="readings-section-header">Device Under Test</div>
+        <div class="reading-row">
+          <span class="reading-label">Voltage</span>
+          <span class="reading-value" id="deviceVoltage">-- V</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Current</span>
+          <span class="reading-value" id="deviceCurrent">-- A</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Power</span>
+          <span class="reading-value large" id="devicePower">-- W</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Energy</span>
+          <span class="reading-value" id="deviceEnergy">-- Wh</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Capacity</span>
+          <span class="reading-value" id="deviceCapacity">-- mAh</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Temperature</span>
+          <span class="reading-value" id="deviceTemp">-- °C</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">USB D-/D+</span>
+          <span class="reading-value" id="deviceUsb">-- / -- V</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Duration</span>
+          <span class="reading-value" id="deviceDuration">000:00:00</span>
+        </div>
+      </div>
 
-  <div id="graph"></div>
+      <div class="readings-section delta">
+        <div class="readings-section-header">Delta (Supply - Device)</div>
+        <div class="reading-row">
+          <span class="reading-label">Voltage Drop</span>
+          <span class="reading-value" id="deltaVoltage">-- V</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Current Diff</span>
+          <span class="reading-value" id="deltaCurrent">-- A</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Power Loss</span>
+          <span class="reading-value large" id="deltaPower">-- W</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Efficiency</span>
+          <span class="reading-value large" id="efficiency">-- %</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Cable Resistance</span>
+          <span class="reading-value" id="cableResistance">-- Ω</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Supply Samples</span>
+          <span class="reading-value" id="supplySamples">0</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Device Samples</span>
+          <span class="reading-value" id="deviceSamples">0</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-label">Sync Status</span>
+          <span class="reading-value" id="syncStatus">Idle</span>
+        </div>
+      </div>
+    </div>
 
-  <dialog id="dialog">
-    <header>Error</header>
-    <form method="dialog">
-      <p id="dialogError"></p>
-      <menu>
-        <button value="">Close</button>
-      </menu>
-    </form>
-  </dialog>
+    <!-- Charts -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <span class="chart-title">Synchronized Data</span>
+        <div class="chart-tabs">
+          <button class="chart-tab active" data-chart="voltage">Voltage</button>
+          <button class="chart-tab" data-chart="current">Current</button>
+          <button class="chart-tab" data-chart="power">Power</button>
+          <button class="chart-tab" data-chart="energy">Energy</button>
+          <button class="chart-tab" data-chart="temperature">Temp</button>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
 
-  <footer style="text-align: right;">
-    <a target="_blank" href="https://twitter.com/lanrat">Made by @LANRAT</a>
-    <br>
-    <a target="_blank" href="https://github.com/lanrat/usb-meter">Source
-      Code</a>
-  </footer>
-  <script src="https://cdn.plot.ly/plotly-2.14.0.min.js" defer></script>
-  <script src="./js/meter.js" defer></script>
-  <script src="./js/script.js" defer></script>
+    <!-- Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-title">Supply Statistics (min / avg / max)</div>
+        <div class="stat-row"><span class="label">Voltage</span><span class="value" id="statSupplyVoltage">-- / -- / --</span></div>
+        <div class="stat-row"><span class="label">Current</span><span class="value" id="statSupplyCurrent">-- / -- / --</span></div>
+        <div class="stat-row"><span class="label">Power</span><span class="value" id="statSupplyPower">-- / -- / --</span></div>
+        <div class="stat-row"><span class="label">Temperature</span><span class="value" id="statSupplyTemp">-- / -- / --</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-title">Device Statistics (min / avg / max)</div>
+        <div class="stat-row"><span class="label">Voltage</span><span class="value" id="statDeviceVoltage">-- / -- / --</span></div>
+        <div class="stat-row"><span class="label">Current</span><span class="value" id="statDeviceCurrent">-- / -- / --</span></div>
+        <div class="stat-row"><span class="label">Power</span><span class="value" id="statDevicePower">-- / -- / --</span></div>
+        <div class="stat-row"><span class="label">Temperature</span><span class="value" id="statDeviceTemp">-- / -- / --</span></div>
+      </div>
+    </div>
 
+    <!-- Event Log -->
+    <div class="log-container">
+      <div class="log-title">Event Log</div>
+      <div id="logEntries"></div>
+    </div>
+
+    <footer>
+      USB Multi Meter &mdash; Multi-device BLE power meter dashboard.
+      Uses <a href="https://web.dev/bluetooth/" target="_blank">WebBluetooth</a> to connect to Atorch-compatible meters.
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
-
 </html>

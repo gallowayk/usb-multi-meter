@@ -1,49 +1,99 @@
-# [USB BLE Power Meter](https://lanrat.github.io/usb-meter/)
+# USB Multi Meter
 
-[lanrat.github.io/usb-meter](https://lanrat.github.io/usb-meter/)
+Multi-device USB BLE power meter dashboard that synchronizes readings from two Atorch-compatible power meters — one on the power supply side and one on the device under test.
 
-## Information
+## Purpose
 
-This webapp makes use of [WebBluetooth](https://web.dev/bluetooth/) to read data
-from the cheap Atorch power meters. Any web browser with WebBluetooth support
-should work, including Chrome based browsers on desktop and Android.
+When testing USB power delivery, cable quality, or device power consumption, you often need to measure both sides simultaneously. This app connects to two BLE power meters and provides:
 
-## Screenshots
+- **Synchronized live readings** from both supply and device sides
+- **Delta calculations** showing voltage drop, current difference, power loss, and efficiency
+- **Cable resistance estimation** derived from voltage drop and current
+- **Real-time charts** with selectable metrics (voltage, current, power, energy, temperature)
+- **Statistics** tracking min/avg/max for each meter
+- **CSV export** of all synchronized data for further analysis
 
-<img width="846" alt="screenshot" src="https://user-images.githubusercontent.com/164192/192336525-22cdd0de-6e44-452f-af97-06c34b4559b4.png">
+## Hardware
 
-### Hardware
+This works with Atorch-compatible BLE power meters including:
 
-![image](https://user-images.githubusercontent.com/164192/192333803-254ac224-3aea-4b4d-8908-5ecca27195f1.png)
+- Atorch J7-C (USB meter)
+- Atorch UD18 (USB meter)
+- Atorch AT24 (USB meter)
+- DL24 electronic load (DC meter mode)
+- Any device compatible with the [E-test](https://play.google.com/store/apps/details?id=com.tang.etest.e_test) app
 
-This should work with most of the power meters made by Atorch. It has only been
-tested with the USB version, but the others should work too. (pull requests welcome).
+You'll need **two meters** — one placed between the power supply and cable, and one between the cable and device.
 
-This should work with any hardware that is supported by the
-[E-test](https://play.google.com/store/apps/details?id=com.tang.etest.e_test) app.
+## Browser Requirements
 
-The specific model used for development was the `Atorch J7-C`, purchased [here](https://www.aliexpress.com/item/3256802185219181.html).
+Requires a browser with [WebBluetooth](https://web.dev/bluetooth/) support:
 
-### DC meter / electronic loads
+- Chrome (desktop + Android)
+- Edge (desktop)
+- Opera (desktop)
 
-It was additionaly tested for **DL24** electronic load which works in DC meter mode when using ATorch protocol (the one used by E-test app). It is limited compared to USB meter mode. There are possibilities to get more data out of the meter using PX100 protocol.
+Safari and Firefox do not currently support WebBluetooth.
 
-Main issues with DC meter mode:
+## Usage
 
-- capacity meter has resolution of 10 mAh, which means that least significant digit of measurement is always 0
-- energy meter is not available
-- `USB Data -/+` field is listed but unavailable
+1. Open `public/index.html` in a supported browser
+2. Click **Connect** on "Power Supply Side" and pair with the meter near your power source
+3. Click **Connect** on "Device Under Test" and pair with the meter near your device
+4. Click **Start Recording** to begin capturing synchronized data
+5. Use the chart tabs to switch between metrics
+6. Click **Export CSV** to download all captured data
 
 ## Building
-
-To build yourself:
 
 ```shell
 npm install
 npm run build
 ```
 
+For development with auto-rebuild:
+
+```shell
+npm run dev
+```
+
+## Serving Locally
+
+Since this uses ES modules, you'll need to serve the files via HTTP (not `file://`):
+
+```shell
+npx serve public
+```
+
+Or with Python:
+
+```shell
+cd public && python3 -m http.server 8000
+```
+
+## Architecture
+
+```
+src/
+├── meter.ts          # BLE protocol handler for Atorch meters
+├── sync-manager.ts   # Synchronization logic pairing readings from two devices
+└── app.ts            # UI controller with Chart.js integration
+public/
+├── index.html        # Single-page dashboard
+└── js/               # Compiled JavaScript output
+```
+
+## Protocol
+
+Uses the Atorch BLE UART protocol:
+
+- Service UUID: `0000FFE0-0000-1000-8000-00805F9B34FB`
+- Characteristic UUID: `0000FFE1-0000-1000-8000-00805F9B34FB`
+
+Packets are 36 bytes with voltage, current, capacity, energy, temperature, and duration fields encoded as big-endian integers with known divisors.
+
 ## References
 
-* <https://github.com/NiceLabs/atorch-console/blob/master/docs/protocol-design.md>
-* <https://github.com/syssi/esphome-atorch-dl24>
+- [Atorch protocol documentation](https://github.com/CursedHardware/atorch-console/blob/master/docs/protocol-design.md)
+- [Original single-meter app](https://github.com/lanrat/usb-meter)
+- [ESPHome Atorch integration](https://github.com/syssi/esphome-atorch-dl24)
