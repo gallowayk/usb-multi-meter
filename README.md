@@ -4,7 +4,7 @@
 
 ## Information
 
-This webapp is a fork of the original (lanrat.github.io/usb-meter). Like the original, it makes use of [WebBluetooth](https://web.dev/bluetooth/) to read data from the cheap Atorch power meters. All credit goes to [lanrat](https://www.github.com/lanrat) Any web browser with WebBluetooth support
+This webapp is a fork of the original (lanrat.github.io/usb-meter). Like the original, it makes use of [WebBluetooth](https://web.dev/bluetooth/) to read data from the cheap Atorch power meters. All credit goes to [lanrat](https://www.github.com/lanrat). Any web browser with WebBluetooth support
 should work, including Chrome based browsers on desktop and Android. The primary difference is that this version supports connecting to two meters so you can measure source (supply) and client (device) at the same time, syncing the data for easier modeling. 
 
 ## Screenshots
