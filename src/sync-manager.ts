@@ -195,55 +195,40 @@ export class SyncManager {
         this.updateStats(this._deviceStats, event.data);
       }
 
-      this.trySync(event.meterId);
+      this.trySync();
     }
   }
 
-  private trySync(triggeredBy: string) {
+  private trySync() {
     const supply = this.lastSupplyReading;
     const device = this.lastDeviceReading;
 
-    if (supply && device) {
-      const withinWindow = Math.abs(supply.timestamp - device.timestamp) <= this.syncWindow;
+    let pair: SyncedReadingPair;
 
-      if (withinWindow) {
-        this.emitPair({
-          timestamp: Math.max(supply.timestamp, device.timestamp),
-          supply,
-          device,
-          delta: {
-            voltage: Math.round((supply.voltage - device.voltage) * 100) / 100,
-            current: Math.round((supply.current - device.current) * 100) / 100,
-            power: Math.round((supply.power - device.power) * 100) / 100,
-          },
-        });
-      } else {
-        this.emitPair({
-          timestamp: Date.now(),
-          supply: triggeredBy === "supply" ? supply : null,
-          device: triggeredBy === "device" ? device : null,
-          delta: {
-            voltage: null,
-            current: null,
-            power: null,
-          },
-        });
-      }
+    if (supply && device && Math.abs(supply.timestamp - device.timestamp) <= this.syncWindow) {
+      pair = {
+        timestamp: Math.max(supply.timestamp, device.timestamp),
+        supply,
+        device,
+        delta: {
+          voltage: Math.round((supply.voltage - device.voltage) * 100) / 100,
+          current: Math.round((supply.current - device.current) * 100) / 100,
+          power: Math.round((supply.power - device.power) * 100) / 100,
+        },
+      };
     } else {
-      this.emitPair({
+      pair = {
         timestamp: Date.now(),
         supply: supply || null,
         device: device || null,
         delta: {
-          voltage: null,
-          current: null,
-          power: null,
+          voltage: supply && device ? Math.round((supply.voltage - device.voltage) * 100) / 100 : null,
+          current: supply && device ? Math.round((supply.current - device.current) * 100) / 100 : null,
+          power: supply && device ? Math.round((supply.power - device.power) * 100) / 100 : null,
         },
-      });
+      };
     }
-  }
 
-  private emitPair(pair: SyncedReadingPair) {
     this._history.push(pair);
     if (this._history.length > this.maxHistory) {
       this._history.shift();
