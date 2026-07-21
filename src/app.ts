@@ -389,17 +389,22 @@ function addLog(msg: string, cls = "") {
 }
 
 function updateConnectionUI() {
+  const supplyReadingId = document.getElementById("supplyReadingId")!;
+  const deviceReadingId = document.getElementById("deviceReadingId")!;
+
   if (syncMgr.supplyConnected) {
     supplyStatus.classList.add("connected");
     const id = syncMgr.supplyDeviceId;
     const customName = getDeviceName(id, syncMgr.supplyName);
     supplyNameEl.textContent = `${customName} [${id.slice(0, 8)}]`;
+    supplyReadingId.textContent = `— ${customName}`;
     btnConnectSupply.textContent = "Disconnect";
     btnConnectSupply.classList.add("btn-danger");
     btnConnectSupply.classList.remove("btn-supply");
   } else {
     supplyStatus.classList.remove("connected");
     supplyNameEl.textContent = "Not connected";
+    supplyReadingId.textContent = "";
     btnConnectSupply.textContent = "Connect";
     btnConnectSupply.classList.remove("btn-danger");
     btnConnectSupply.classList.add("btn-supply");
@@ -410,12 +415,14 @@ function updateConnectionUI() {
     const id = syncMgr.deviceDeviceId;
     const customName = getDeviceName(id, syncMgr.deviceName);
     deviceNameEl.textContent = `${customName} [${id.slice(0, 8)}]`;
+    deviceReadingId.textContent = `— ${customName}`;
     btnConnectDevice.textContent = "Disconnect";
     btnConnectDevice.classList.add("btn-danger");
     btnConnectDevice.classList.remove("btn-device");
   } else {
     deviceStatus.classList.remove("connected");
     deviceNameEl.textContent = "Not connected";
+    deviceReadingId.textContent = "";
     btnConnectDevice.textContent = "Connect";
     btnConnectDevice.classList.remove("btn-danger");
     btnConnectDevice.classList.add("btn-device");

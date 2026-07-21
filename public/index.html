@@ -284,6 +284,13 @@
       color: var(--device-color);
     }
 
+    .readings-device-id {
+      font-weight: 400;
+      font-size: 0.65rem;
+      opacity: 0.7;
+      margin-left: 8px;
+    }
+
     .readings-section.delta .readings-section-header {
       background: var(--delta-bg);
       color: var(--delta-color);
@@ -586,7 +593,7 @@
     <!-- Live Readings -->
     <div class="readings-grid">
       <div class="readings-section supply" id="supplySection">
-        <div class="readings-section-header" id="supplyHeader">Power Supply</div>
+        <div class="readings-section-header" id="supplyHeader">Power Supply <span class="readings-device-id" id="supplyReadingId"></span></div>
         <div class="reading-row">
           <span class="reading-label">Voltage</span>
           <span class="reading-value" id="supplyVoltage">-- V</span>
@@ -622,7 +629,7 @@
       </div>
 
       <div class="readings-section device" id="deviceSection">
-        <div class="readings-section-header" id="deviceHeader">Device Under Test</div>
+        <div class="readings-section-header" id="deviceHeader">Device Under Test <span class="readings-device-id" id="deviceReadingId"></span></div>
         <div class="reading-row">
           <span class="reading-label">Voltage</span>
           <span class="reading-value" id="deviceVoltage">-- V</span>
