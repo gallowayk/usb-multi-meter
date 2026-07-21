@@ -465,11 +465,28 @@ btnRecord.addEventListener("click", () => {
 btnSwap.addEventListener("click", () => {
   syncMgr.swapMeters();
   updateConnectionUI();
+
   // Swap labels
   const tempLabel = supplyLabelInput.value;
   supplyLabelInput.value = deviceLabelInput.value;
   deviceLabelInput.value = tempLabel;
   saveLabels();
+
+  // Swap reading section colors and headers
+  const supplySection = document.getElementById("supplySection")!;
+  const deviceSection = document.getElementById("deviceSection")!;
+  const supplyHeader = document.getElementById("supplyHeader")!;
+  const deviceHeader = document.getElementById("deviceHeader")!;
+
+  supplySection.classList.toggle("supply");
+  supplySection.classList.toggle("device");
+  deviceSection.classList.toggle("supply");
+  deviceSection.classList.toggle("device");
+
+  const tempHeaderText = supplyHeader.textContent;
+  supplyHeader.textContent = deviceHeader.textContent;
+  deviceHeader.textContent = tempHeaderText;
+
   addLog(`[${new Date().toLocaleTimeString()}] Swapped supply and device meters`);
 });
 
