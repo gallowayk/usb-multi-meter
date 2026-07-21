@@ -5,6 +5,43 @@ declare const Chart: any;
 
 const syncMgr = new SyncManager();
 
+// Device name registry: maps BLE device.id to user-assigned names
+const DEVICE_REGISTRY_KEY = "usb-mm-device-registry";
+
+interface DeviceRegistry {
+  [deviceId: string]: string;
+}
+
+function getDeviceRegistry(): DeviceRegistry {
+  try {
+    return JSON.parse(localStorage.getItem(DEVICE_REGISTRY_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function setDeviceName(deviceId: string, name: string) {
+  const registry = getDeviceRegistry();
+  registry[deviceId] = name;
+  localStorage.setItem(DEVICE_REGISTRY_KEY, JSON.stringify(registry));
+}
+
+function getDeviceName(deviceId: string, fallbackBleName: string): string {
+  const registry = getDeviceRegistry();
+  return registry[deviceId] || fallbackBleName;
+}
+
+function promptDeviceName(deviceId: string, bleName: string): string {
+  const existing = getDeviceRegistry()[deviceId];
+  if (existing) return existing;
+  const name = prompt(`Assign a name for this device:\n\nBLE Name: ${bleName}\nID: ${deviceId.slice(0, 8)}...`, bleName);
+  if (name && name.trim()) {
+    setDeviceName(deviceId, name.trim());
+    return name.trim();
+  }
+  return bleName;
+}
+
 // DOM elements
 const bleWarning = document.getElementById("bleWarning")!;
 const supplyStatus = document.getElementById("supplyStatus")!;
@@ -354,7 +391,9 @@ function addLog(msg: string, cls = "") {
 function updateConnectionUI() {
   if (syncMgr.supplyConnected) {
     supplyStatus.classList.add("connected");
-    supplyNameEl.textContent = syncMgr.supplyName;
+    const id = syncMgr.supplyDeviceId;
+    const customName = getDeviceName(id, syncMgr.supplyName);
+    supplyNameEl.textContent = `${customName} [${id.slice(0, 8)}]`;
     btnConnectSupply.textContent = "Disconnect";
     btnConnectSupply.classList.add("btn-danger");
     btnConnectSupply.classList.remove("btn-supply");
@@ -368,7 +407,9 @@ function updateConnectionUI() {
 
   if (syncMgr.deviceConnected) {
     deviceStatus.classList.add("connected");
-    deviceNameEl.textContent = syncMgr.deviceName;
+    const id = syncMgr.deviceDeviceId;
+    const customName = getDeviceName(id, syncMgr.deviceName);
+    deviceNameEl.textContent = `${customName} [${id.slice(0, 8)}]`;
     btnConnectDevice.textContent = "Disconnect";
     btnConnectDevice.classList.add("btn-danger");
     btnConnectDevice.classList.remove("btn-device");
@@ -418,6 +459,8 @@ btnConnectSupply.addEventListener("click", async () => {
   } else {
     try {
       await syncMgr.connectSupply();
+      const id = syncMgr.supplyDeviceId;
+      if (id) promptDeviceName(id, syncMgr.supplyName);
     } catch (e: any) {
       if (e.message !== "User cancelled the requestDevice() chooser.") {
         addLog(`Connection failed: ${e.message}`, "error");
@@ -434,6 +477,8 @@ btnConnectDevice.addEventListener("click", async () => {
   } else {
     try {
       await syncMgr.connectDevice();
+      const id = syncMgr.deviceDeviceId;
+      if (id) promptDeviceName(id, syncMgr.deviceName);
     } catch (e: any) {
       if (e.message !== "User cancelled the requestDevice() chooser.") {
         addLog(`Connection failed: ${e.message}`, "error");
