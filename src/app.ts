@@ -99,6 +99,8 @@ const chartData: {
 
 let paused = false;
 let elapsedInterval: ReturnType<typeof setInterval> | null = null;
+let pausedDuration = 0;
+let pauseStartedAt: number | null = null;
 
 function initChart() {
   const canvas = document.getElementById("mainChart") as HTMLCanvasElement;
@@ -376,9 +378,11 @@ function updateConnectionUI() {
 
 function startElapsedTimer() {
   if (elapsedInterval) clearInterval(elapsedInterval);
+  pausedDuration = 0;
+  pauseStartedAt = null;
   elapsedInterval = setInterval(() => {
     if (!syncMgr.startTime || paused) return;
-    const elapsed = Date.now() - syncMgr.startTime;
+    const elapsed = Date.now() - syncMgr.startTime - pausedDuration;
     const secs = Math.floor(elapsed / 1000) % 60;
     const mins = Math.floor(elapsed / 60000) % 60;
     const hrs = Math.floor(elapsed / 3600000);
@@ -458,11 +462,22 @@ btnReset.addEventListener("click", () => {
   resetChartData();
   sampleCounter.textContent = "Samples: 0 / 0";
   elapsedEl.textContent = "00:00:00";
+  if (elapsedInterval) clearInterval(elapsedInterval);
+  if (syncMgr.recording) {
+    syncMgr.startRecording();
+    startElapsedTimer();
+  }
   addLog(`[${new Date().toLocaleTimeString()}] Data reset`);
 });
 
 btnPause.addEventListener("click", () => {
   paused = !paused;
+  if (paused) {
+    pauseStartedAt = Date.now();
+  } else if (pauseStartedAt) {
+    pausedDuration += Date.now() - pauseStartedAt;
+    pauseStartedAt = null;
+  }
   btnPause.textContent = paused ? "Resume" : "Pause";
 });
 

@@ -138,7 +138,13 @@ export class SyncManager {
     this._deviceStats = this.emptyStats();
     this.lastSupplyReading = null;
     this.lastDeviceReading = null;
+    this.lastSyncedSupplyTs = 0;
+    this.lastSyncedDeviceTs = 0;
+    this._startTime = Date.now();
   }
+
+  private lastSyncedSupplyTs = 0;
+  private lastSyncedDeviceTs = 0;
 
   private handleEvent(event: MeterEvent) {
     if (this.deviceEventCallback) {
@@ -162,40 +168,58 @@ export class SyncManager {
         this.updateStats(this._deviceStats, event.data);
       }
 
-      this.trySync();
+      this.trySync(event.meterId);
     }
   }
 
-  private trySync() {
+  private trySync(triggeredBy: string) {
     const supply = this.lastSupplyReading;
     const device = this.lastDeviceReading;
 
-    let pair: SyncedReadingPair;
+    if (supply && device) {
+      const bothFresh = supply.timestamp > this.lastSyncedSupplyTs && device.timestamp > this.lastSyncedDeviceTs;
+      const withinWindow = Math.abs(supply.timestamp - device.timestamp) <= this.syncWindow;
 
-    if (supply && device && Math.abs(supply.timestamp - device.timestamp) <= this.syncWindow) {
-      pair = {
-        timestamp: Math.max(supply.timestamp, device.timestamp),
-        supply,
-        device,
-        delta: {
-          voltage: Math.round((supply.voltage - device.voltage) * 100) / 100,
-          current: Math.round((supply.current - device.current) * 100) / 100,
-          power: Math.round((supply.power - device.power) * 100) / 100,
-        },
-      };
+      if (withinWindow && bothFresh) {
+        this.lastSyncedSupplyTs = supply.timestamp;
+        this.lastSyncedDeviceTs = device.timestamp;
+        this.emitPair({
+          timestamp: Math.max(supply.timestamp, device.timestamp),
+          supply,
+          device,
+          delta: {
+            voltage: Math.round((supply.voltage - device.voltage) * 100) / 100,
+            current: Math.round((supply.current - device.current) * 100) / 100,
+            power: Math.round((supply.power - device.power) * 100) / 100,
+          },
+        });
+      } else if (!withinWindow) {
+        this.emitPair({
+          timestamp: Date.now(),
+          supply: triggeredBy === "supply" ? supply : null,
+          device: triggeredBy === "device" ? device : null,
+          delta: {
+            voltage: null,
+            current: null,
+            power: null,
+          },
+        });
+      }
     } else {
-      pair = {
+      this.emitPair({
         timestamp: Date.now(),
         supply: supply || null,
         device: device || null,
         delta: {
-          voltage: supply && device ? Math.round((supply.voltage - device.voltage) * 100) / 100 : null,
-          current: supply && device ? Math.round((supply.current - device.current) * 100) / 100 : null,
-          power: supply && device ? Math.round((supply.power - device.power) * 100) / 100 : null,
+          voltage: null,
+          current: null,
+          power: null,
         },
-      };
+      });
     }
+  }
 
+  private emitPair(pair: SyncedReadingPair) {
     this._history.push(pair);
     if (this._history.length > this.maxHistory) {
       this._history.shift();
