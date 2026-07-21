@@ -543,6 +543,14 @@ document.addEventListener("DOMContentLoaded", () => {
     bleWarning.classList.add("visible");
   }
 
+  // Clear stale swapped labels from previous version
+  const storedSupply = localStorage.getItem("usb-mm-supply-label");
+  const storedDevice = localStorage.getItem("usb-mm-device-label");
+  if (storedSupply === "Device Under Test" || storedDevice === "Power Supply Side") {
+    localStorage.removeItem("usb-mm-supply-label");
+    localStorage.removeItem("usb-mm-device-label");
+  }
+
   loadLabels();
   syncMgr.onSync(onSyncPair);
   syncMgr.onDeviceEvent(onDeviceEvent);
