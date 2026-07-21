@@ -120,6 +120,17 @@ export class SyncManager {
     await this.deviceMeter.disconnect();
   }
 
+  async resetMeters(): Promise<void> {
+    const promises: Promise<void>[] = [];
+    if (this.supplyMeter.connected) {
+      promises.push(this.supplyMeter.resetCounters());
+    }
+    if (this.deviceMeter.connected) {
+      promises.push(this.deviceMeter.resetCounters());
+    }
+    await Promise.all(promises);
+  }
+
   startRecording() {
     this._recording = true;
     this._startTime = Date.now();
@@ -138,13 +149,8 @@ export class SyncManager {
     this._deviceStats = this.emptyStats();
     this.lastSupplyReading = null;
     this.lastDeviceReading = null;
-    this.lastSyncedSupplyTs = 0;
-    this.lastSyncedDeviceTs = 0;
     this._startTime = Date.now();
   }
-
-  private lastSyncedSupplyTs = 0;
-  private lastSyncedDeviceTs = 0;
 
   private handleEvent(event: MeterEvent) {
     if (this.deviceEventCallback) {
@@ -177,12 +183,9 @@ export class SyncManager {
     const device = this.lastDeviceReading;
 
     if (supply && device) {
-      const bothFresh = supply.timestamp > this.lastSyncedSupplyTs && device.timestamp > this.lastSyncedDeviceTs;
       const withinWindow = Math.abs(supply.timestamp - device.timestamp) <= this.syncWindow;
 
-      if (withinWindow && bothFresh) {
-        this.lastSyncedSupplyTs = supply.timestamp;
-        this.lastSyncedDeviceTs = device.timestamp;
+      if (withinWindow) {
         this.emitPair({
           timestamp: Math.max(supply.timestamp, device.timestamp),
           supply,
@@ -193,7 +196,7 @@ export class SyncManager {
             power: Math.round((supply.power - device.power) * 100) / 100,
           },
         });
-      } else if (!withinWindow) {
+      } else {
         this.emitPair({
           timestamp: Date.now(),
           supply: triggeredBy === "supply" ? supply : null,

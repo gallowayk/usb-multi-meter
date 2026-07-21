@@ -240,13 +240,6 @@ function updateStats() {
 function onSyncPair(pair: SyncedReadingPair) {
   if (paused) return;
 
-  if (pair.supply) {
-    updateReadingDisplay(supplyReadings, pair.supply);
-  }
-  if (pair.device) {
-    updateReadingDisplay(deviceReadings, pair.device);
-  }
-
   // Delta
   if (pair.delta.voltage !== null) {
     deltaReadings.voltage.textContent = `${pair.delta.voltage.toFixed(3)} V`;
@@ -327,6 +320,15 @@ function onDeviceEvent(event: MeterEvent) {
       msg = `[${time}] ${event.meterId.toUpperCase()} error: ${event.error}`;
       cls = "error";
       break;
+    case "reading":
+      if (!paused && event.data) {
+        if (event.meterId === "supply") {
+          updateReadingDisplay(supplyReadings, event.data);
+        } else {
+          updateReadingDisplay(deviceReadings, event.data);
+        }
+      }
+      return;
     default:
       return;
   }
@@ -457,7 +459,8 @@ btnRecord.addEventListener("click", () => {
   }
 });
 
-btnReset.addEventListener("click", () => {
+btnReset.addEventListener("click", async () => {
+  await syncMgr.resetMeters();
   syncMgr.reset();
   resetChartData();
   sampleCounter.textContent = "Samples: 0 / 0";
