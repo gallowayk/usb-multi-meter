@@ -13,6 +13,9 @@ const supplyNameEl = document.getElementById("supplyName")!;
 const deviceNameEl = document.getElementById("deviceName")!;
 const btnConnectSupply = document.getElementById("btnConnectSupply") as HTMLButtonElement;
 const btnConnectDevice = document.getElementById("btnConnectDevice") as HTMLButtonElement;
+const btnSwap = document.getElementById("btnSwap") as HTMLButtonElement;
+const supplyLabelInput = document.getElementById("supplyLabel") as HTMLInputElement;
+const deviceLabelInput = document.getElementById("deviceLabel") as HTMLInputElement;
 const btnRecord = document.getElementById("btnRecord") as HTMLButtonElement;
 const btnReset = document.getElementById("btnReset") as HTMLButtonElement;
 const btnPause = document.getElementById("btnPause") as HTMLButtonElement;
@@ -459,6 +462,32 @@ btnRecord.addEventListener("click", () => {
   }
 });
 
+btnSwap.addEventListener("click", () => {
+  syncMgr.swapMeters();
+  updateConnectionUI();
+  // Swap labels
+  const tempLabel = supplyLabelInput.value;
+  supplyLabelInput.value = deviceLabelInput.value;
+  deviceLabelInput.value = tempLabel;
+  saveLabels();
+  addLog(`[${new Date().toLocaleTimeString()}] Swapped supply and device meters`);
+});
+
+supplyLabelInput.addEventListener("change", saveLabels);
+deviceLabelInput.addEventListener("change", saveLabels);
+
+function saveLabels() {
+  localStorage.setItem("usb-mm-supply-label", supplyLabelInput.value);
+  localStorage.setItem("usb-mm-device-label", deviceLabelInput.value);
+}
+
+function loadLabels() {
+  const supplyLabel = localStorage.getItem("usb-mm-supply-label");
+  const deviceLabel = localStorage.getItem("usb-mm-device-label");
+  if (supplyLabel) supplyLabelInput.value = supplyLabel;
+  if (deviceLabel) deviceLabelInput.value = deviceLabel;
+}
+
 btnReset.addEventListener("click", async () => {
   await syncMgr.resetMeters();
   syncMgr.reset();
@@ -519,6 +548,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bleWarning.classList.add("visible");
   }
 
+  loadLabels();
   syncMgr.onSync(onSyncPair);
   syncMgr.onDeviceEvent(onDeviceEvent);
   initChart();

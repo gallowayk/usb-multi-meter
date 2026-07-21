@@ -446,6 +446,51 @@
       border-radius: var(--radius-sm);
     }
 
+    .device-label-input {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      padding: 2px 6px;
+      margin: -2px -6px;
+      width: auto;
+      max-width: 160px;
+      cursor: text;
+    }
+
+    .device-label-input:hover {
+      border-color: var(--border);
+    }
+
+    .device-label-input:focus {
+      outline: none;
+      border-color: var(--supply-color);
+      background: var(--surface-raised);
+    }
+
+    .device .device-label-input:focus {
+      border-color: var(--device-color);
+    }
+
+    .btn-swap {
+      border-color: var(--delta-color);
+      color: var(--delta-color);
+      font-size: 0.75rem;
+      padding: 6px 12px;
+    }
+
+    .btn-swap:hover {
+      background: var(--delta-bg);
+    }
+
+    .device-card-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     .elapsed {
       font-family: "SF Mono", "Fira Code", monospace;
       font-size: 0.8rem;
@@ -508,15 +553,18 @@
     <div class="connection-panel">
       <div class="device-card supply">
         <div class="device-card-header">
-          <span class="device-card-title">Power Supply Side</span>
+          <input class="device-label-input" id="supplyLabel" value="Power Supply Side" spellcheck="false">
           <span class="status-dot" id="supplyStatus"></span>
         </div>
         <div class="device-name" id="supplyName">Not connected</div>
-        <button class="btn btn-supply" id="btnConnectSupply">Connect</button>
+        <div class="device-card-actions">
+          <button class="btn btn-supply" id="btnConnectSupply">Connect</button>
+          <button class="btn btn-swap" id="btnSwap">Swap</button>
+        </div>
       </div>
       <div class="device-card device">
         <div class="device-card-header">
-          <span class="device-card-title">Device Under Test</span>
+          <input class="device-label-input" id="deviceLabel" value="Device Under Test" spellcheck="false">
           <span class="status-dot" id="deviceStatus"></span>
         </div>
         <div class="device-name" id="deviceName">Not connected</div>

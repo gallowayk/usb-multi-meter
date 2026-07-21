@@ -129,7 +129,7 @@ function parsePacket(data: DataView): MeterReading | null {
 export { UUID_SERVICE, UUID_CHARACTERISTIC };
 
 export class Meter {
-  readonly id: string;
+  id: string;
   private device: BluetoothDevice | null = null;
   private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private callback: MeterEventCallback | null = null;
@@ -155,6 +155,10 @@ export class Meter {
 
   get deviceName(): string {
     return this.device?.name || "Unknown Device";
+  }
+
+  get bleDeviceId(): string {
+    return this.device?.id || "";
   }
 
   onEvent(callback: MeterEventCallback) {

@@ -68,6 +68,27 @@ export class SyncManager {
     return this.deviceMeter.deviceName;
   }
 
+  get supplyDeviceId(): string {
+    return this.supplyMeter.bleDeviceId;
+  }
+
+  get deviceDeviceId(): string {
+    return this.deviceMeter.bleDeviceId;
+  }
+
+  swapMeters() {
+    const temp = this.supplyMeter;
+    this.supplyMeter = this.deviceMeter;
+    this.deviceMeter = temp;
+    this.supplyMeter.id = "supply";
+    this.deviceMeter.id = "device";
+    this.supplyMeter.onEvent(this.handleEvent.bind(this));
+    this.deviceMeter.onEvent(this.handleEvent.bind(this));
+    const tempReading = this.lastSupplyReading;
+    this.lastSupplyReading = this.lastDeviceReading;
+    this.lastDeviceReading = tempReading;
+  }
+
   get history(): SyncedReadingPair[] {
     return this._history;
   }
