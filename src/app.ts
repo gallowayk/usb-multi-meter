@@ -397,6 +397,8 @@ function updateConnectionUI() {
     const id = syncMgr.supplyDeviceId;
     const customName = getDeviceName(id, syncMgr.supplyName);
     supplyNameEl.textContent = `${customName} [${id.slice(0, 8)}]`;
+    supplyNameEl.classList.add("editable");
+    supplyNameEl.title = "Click to rename";
     supplyReadingId.textContent = `— ${customName}`;
     btnConnectSupply.textContent = "Disconnect";
     btnConnectSupply.classList.add("btn-danger");
@@ -404,6 +406,8 @@ function updateConnectionUI() {
   } else {
     supplyStatus.classList.remove("connected");
     supplyNameEl.textContent = "Not connected";
+    supplyNameEl.classList.remove("editable");
+    supplyNameEl.title = "";
     supplyReadingId.textContent = "";
     btnConnectSupply.textContent = "Connect";
     btnConnectSupply.classList.remove("btn-danger");
@@ -415,6 +419,8 @@ function updateConnectionUI() {
     const id = syncMgr.deviceDeviceId;
     const customName = getDeviceName(id, syncMgr.deviceName);
     deviceNameEl.textContent = `${customName} [${id.slice(0, 8)}]`;
+    deviceNameEl.classList.add("editable");
+    deviceNameEl.title = "Click to rename";
     deviceReadingId.textContent = `— ${customName}`;
     btnConnectDevice.textContent = "Disconnect";
     btnConnectDevice.classList.add("btn-danger");
@@ -422,6 +428,8 @@ function updateConnectionUI() {
   } else {
     deviceStatus.classList.remove("connected");
     deviceNameEl.textContent = "Not connected";
+    deviceNameEl.classList.remove("editable");
+    deviceNameEl.title = "";
     deviceReadingId.textContent = "";
     btnConnectDevice.textContent = "Connect";
     btnConnectDevice.classList.remove("btn-danger");
@@ -457,6 +465,29 @@ function resetChartData() {
   chartData.deviceTemp = [];
   updateChart();
 }
+
+// Rename device on click
+supplyNameEl.addEventListener("click", () => {
+  if (!syncMgr.supplyConnected) return;
+  const id = syncMgr.supplyDeviceId;
+  const current = getDeviceName(id, syncMgr.supplyName);
+  const name = prompt(`Rename this device:\n\nBLE Name: ${syncMgr.supplyName}\nID: ${id.slice(0, 8)}...`, current);
+  if (name && name.trim()) {
+    setDeviceName(id, name.trim());
+    updateConnectionUI();
+  }
+});
+
+deviceNameEl.addEventListener("click", () => {
+  if (!syncMgr.deviceConnected) return;
+  const id = syncMgr.deviceDeviceId;
+  const current = getDeviceName(id, syncMgr.deviceName);
+  const name = prompt(`Rename this device:\n\nBLE Name: ${syncMgr.deviceName}\nID: ${id.slice(0, 8)}...`, current);
+  if (name && name.trim()) {
+    setDeviceName(id, name.trim());
+    updateConnectionUI();
+  }
+});
 
 // Event handlers
 btnConnectSupply.addEventListener("click", async () => {
